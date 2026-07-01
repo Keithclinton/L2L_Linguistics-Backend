@@ -50,14 +50,8 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_lessons(self, obj):
-        request = self.context.get('request')
         lessons = obj.lessons.all()
-        # Show full lesson list only to enrolled learners; others see preview lessons only
-        if request and request.user.is_authenticated:
-            enrolled = obj.enrollments.filter(learner=request.user, status='active').exists()
-            if enrolled:
-                return LessonListSerializer(lessons, many=True).data
-        return LessonListSerializer(lessons.filter(is_preview=True), many=True).data
+        return LessonListSerializer(lessons, many=True).data
 
     def get_lesson_count(self, obj):
         return obj.lessons.count()
