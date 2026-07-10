@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 from decouple import config
-from datetime import timedelta
 import dj_database_url
+import firebase_admin
+from firebase_admin import credentials
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -83,9 +85,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Vercel Blob for course thumbnails / profile pictures in production; local disk
+# for development so contributors don't need a Blob token to run the server.
+DEFAULT_FILE_STORAGE_BACKEND = (
+    'config.storage.VercelBlobStorage'
+    if config('BLOB_READ_WRITE_TOKEN', default='')
+    else 'django.core.files.storage.FileSystemStorage'
+)
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': DEFAULT_FILE_STORAGE_BACKEND,
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
@@ -101,19 +111,16 @@ AUTH_USER_MODEL = 'users.Learner'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.FirebaseAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
-    'ROTATE_REFRESH_TOKENS': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default='')
+if FIREBASE_CREDENTIALS_JSON and not firebase_admin._apps:
+    firebase_admin.initialize_app(credentials.Certificate(json.loads(FIREBASE_CREDENTIALS_JSON)))
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',

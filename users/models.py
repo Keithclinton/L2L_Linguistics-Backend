@@ -20,6 +20,7 @@ class LearnerManager(BaseUserManager):
 
 class Learner(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True, db_index=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=20, blank=True)

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Course, Lesson, Enrollment, LessonProgress
+from .access import has_course_access
+from .youtube import build_embed_url
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -9,9 +11,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    embed_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'content', 'video_url', 'order', 'duration_minutes', 'is_preview']
+        fields = ['id', 'title', 'content', 'embed_url', 'order', 'duration_minutes', 'is_preview']
+
+    def get_embed_url(self, obj):
+        return build_embed_url(obj.video_url)
 
 
 class LessonListSerializer(serializers.ModelSerializer):
@@ -59,7 +66,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     def get_is_enrolled(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.enrollments.filter(learner=request.user, status='active').exists()
+            return has_course_access(request.user, obj)
         return False
 
 

@@ -9,7 +9,7 @@ from .serializers import (
     CategorySerializer, CourseListSerializer, CourseDetailSerializer,
     LessonSerializer, EnrollmentSerializer, LessonProgressSerializer,
 )
-from .permissions import IsEnrolled
+from .access import has_course_access
 
 
 class CategoryListView(generics.ListAPIView):
@@ -58,7 +58,7 @@ class EnrollView(APIView):
         except Course.DoesNotExist:
             return Response({'detail': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if Enrollment.objects.filter(learner=request.user, course=course).exists():
+        if has_course_access(request.user, course):
             return Response({'detail': 'Already enrolled.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not course.is_free:
@@ -89,11 +89,8 @@ class LessonDetailView(generics.RetrieveAPIView):
         lesson = generics.get_object_or_404(Lesson, pk=self.kwargs['lesson_id'])
         if lesson.is_preview:
             return lesson
-        enrolled = Enrollment.objects.filter(
-            learner=self.request.user, course=lesson.course, status='active'
-        ).exists()
-        if not enrolled:
-            self.permission_denied(self.request, message='Enrollment required to access this lesson.')
+        if not has_course_access(self.request.user, lesson.course):
+            self.permission_denied(self.request, message='Enrollment or an active subscription is required to access this lesson.')
         return lesson
 
 
@@ -102,12 +99,10 @@ class MarkLessonCompleteView(APIView):
 
     def post(self, request, lesson_id):
         lesson = generics.get_object_or_404(Lesson, pk=lesson_id)
-        enrollment = Enrollment.objects.filter(
-            learner=request.user, course=lesson.course, status='active'
-        ).first()
-        if not enrollment:
+        if not has_course_access(request.user, lesson.course):
             return Response({'detail': 'Not enrolled in this course.'}, status=status.HTTP_403_FORBIDDEN)
 
+        enrollment, _ = Enrollment.objects.get_or_create(learner=request.user, course=lesson.course)
         progress, created = LessonProgress.objects.get_or_create(
             enrollment=enrollment, lesson=lesson
         )

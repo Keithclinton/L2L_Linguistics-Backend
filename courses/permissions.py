@@ -1,14 +1,11 @@
 from rest_framework.permissions import BasePermission
-from .models import Enrollment
+from .access import has_course_access
 
 
-class IsEnrolled(BasePermission):
-    """Grants access only if the learner is actively enrolled in the course."""
+class HasCourseAccess(BasePermission):
+    """Grants access if actively enrolled in the course, or holding an
+    active all-access subscription."""
 
     def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated:
-            return False
         course = getattr(obj, 'course', obj)
-        return Enrollment.objects.filter(
-            learner=request.user, course=course, status='active'
-        ).exists()
+        return has_course_access(request.user, course)
