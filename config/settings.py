@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
 
 FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default='').strip().strip('"\'')
 if FIREBASE_CREDENTIALS_JSON and not firebase_admin._apps:
-    firebase_admin.initialize_app(credentials.Certificate(json.loads(FIREBASE_CREDENTIALS_JSON)))
+    firebase_admin.initialize_app(credentials.Certificate(json.loads(FIREBASE_CREDENTIALS_JSON, strict=False)))
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
