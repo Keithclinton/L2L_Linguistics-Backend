@@ -1,1 +1,1 @@
-web: python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi --bind 0.0.0.0:$PORT
+web: python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py seed_swah101 --publish && python manage.py seed_swah102 --publish && gunicorn config.wsgi --bind 0.0.0.0:$PORT
