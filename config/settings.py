@@ -124,7 +124,7 @@ if FIREBASE_CREDENTIALS_JSON and not firebase_admin._apps:
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173',
+    default='http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://ufasahawalugha.co.ke,https://www.ufasahawalugha.co.ke,https://api.ufasahawalugha.co.ke'
 ).split(',')
 
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
